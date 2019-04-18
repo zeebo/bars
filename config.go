@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Owner     string   `json:"owner"`
+	Ownerr    string   `json:"owner"`
 	Repo      string   `json:"repo"`
 	Reviewers []string `json:"reviewers"`
 	TestRef   string   `json:"test_ref"`
