@@ -19,7 +19,7 @@ func main() {
 }
 
 func run(ctx context.Context) (err error) {
-	defer mon.Start().Stop(&err)
+	defer mon.Start().Stop(nil)
 
 	// Construct our github API client.
 	if len(os.Args) < 2 {
