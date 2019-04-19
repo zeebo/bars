@@ -5,7 +5,10 @@ import (
 	"strings"
 )
 
-const barsPrefix = "Bars 🍺\n"
+const (
+	barsPrefix       = "Bars 🍺\n"
+	headerBarsPrefix = "## " + barsPrefix
+)
 
 func LoadComment(text string) interface{} {
 	if text == "r+" {
@@ -59,35 +62,35 @@ type CommentMerge struct {
 }
 
 func (c CommentMerge) String() string {
-	return fmt.Sprintf("## Bars :beer:\nMerge attempt of #%s at ref %s", c.PRNumber, c.Candidate)
+	return fmt.Sprintf(headerBarsPrefix+"Merge attempt of #%s at ref %s", c.PRNumber, c.Candidate)
 }
 
 type CommentPending struct{ Candidate string }
 
 func (c CommentPending) String() string {
-	return fmt.Sprintf("## Bars :beer:\nPending tests for candidate %s", c.Candidate)
+	return fmt.Sprintf(headerBarsPrefix+"Pending tests for candidate %s", c.Candidate)
 }
 
 type CommentStarting struct{ PR string }
 
 func (c CommentStarting) String() string {
-	return fmt.Sprintf("## Bars :beer:\nStarting tests at %s", c.PR)
+	return fmt.Sprintf(headerBarsPrefix+"Starting tests at %s", c.PR)
 }
 
 type CommentSuccess struct{ PR string }
 
 func (c CommentSuccess) String() string {
-	return fmt.Sprintf("## Bars :beer:\nSuccessful tests at %s", c.PR)
+	return fmt.Sprintf(headerBarsPrefix+"Successful tests at %s", c.PR)
 }
 
 type CommentFailure struct{ PR string }
 
 func (c CommentFailure) String() string {
-	return fmt.Sprintf("## Bars :beer:\nFailed tests at %s", c.PR)
+	return fmt.Sprintf(headerBarsPrefix+"Failed tests at %s", c.PR)
 }
 
 type CommentStale struct{}
 
 func (c CommentStale) String() string {
-	return "## Bars :beer:\nStale branch: unable to test"
+	return headerBarsPrefix + "Stale branch: unable to test"
 }
