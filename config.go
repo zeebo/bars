@@ -11,7 +11,6 @@ type Config struct {
 	Owner     string   `json:"owner"`
 	Repo      string   `json:"repo"`
 	Reviewers []string `json:"reviewers"`
-	TestRef   string   `json:"test_ref"`
 	MasterRef string   `json:"master_ref"`
 	Token     string   `json:"token"`
 }
