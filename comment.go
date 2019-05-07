@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -11,86 +10,36 @@ const (
 )
 
 func LoadComment(text string) interface{} {
-	if text == "r+" {
-		return CommentApproval{}
-	} else if text == "r-" {
-		return CommentDisapproval{}
+	if text == "merge" {
+		return CommentMerge{}
+	} else if text == "cancel" {
+		return CommentCancel{}
 	} else if !strings.HasPrefix(text, barsPrefix) {
 		return nil
 	}
 
 	text = text[len(barsPrefix):]
-	fields := strings.Fields(text)
 
 	switch {
-	case strings.HasPrefix(text, "Merge "):
-		return CommentMerge{
-			PRNumber:  fields[len(fields)-4][1:],
-			Candidate: fields[len(fields)-1],
-		}
-
-	case strings.HasPrefix(text, "Pending "):
-		return CommentPending{Candidate: fields[len(fields)-1]}
-
-	case strings.HasPrefix(text, "Starting "):
-		return CommentStarting{PR: fields[len(fields)-1]}
-
-	case strings.HasPrefix(text, "Successful "):
-		return CommentStarting{PR: fields[len(fields)-1]}
-
-	case strings.HasPrefix(text, "Failed "):
-		return CommentStarting{PR: fields[len(fields)-1]}
-
-	case strings.HasPrefix(text, "Stale "):
-		return CommentStale{}
-
+	case strings.HasPrefix(text, "Blocked: "):
+		return CommentBlocked{Why: text[len("Blocked: "):]}
 	}
+
 	return nil
 }
 
-type CommentApproval struct{}
+type CommentMerge struct{}
 
-func (c CommentApproval) String() string { return "r+" }
+func (c CommentMerge) String() string { return "merge" }
 
-type CommentDisapproval struct{}
+type CommentCancel struct{}
 
-func (c CommentDisapproval) String() string { return "r-" }
+func (c CommentCancel) String() string { return "cancel" }
 
-type CommentMerge struct {
-	PRNumber  string
-	Candidate string
+type CommentBlocked struct {
+	Why string
 }
 
-func (c CommentMerge) String() string {
-	return fmt.Sprintf(headerBarsPrefix+"Merge attempt of #%s at ref %s", c.PRNumber, c.Candidate)
-}
-
-type CommentPending struct{ Candidate string }
-
-func (c CommentPending) String() string {
-	return fmt.Sprintf(headerBarsPrefix+"Pending tests for candidate %s", c.Candidate)
-}
-
-type CommentStarting struct{ PR string }
-
-func (c CommentStarting) String() string {
-	return fmt.Sprintf(headerBarsPrefix+"Starting tests at %s", c.PR)
-}
-
-type CommentSuccess struct{ PR string }
-
-func (c CommentSuccess) String() string {
-	return fmt.Sprintf(headerBarsPrefix+"Successful tests at %s", c.PR)
-}
-
-type CommentFailure struct{ PR string }
-
-func (c CommentFailure) String() string {
-	return fmt.Sprintf(headerBarsPrefix+"Failed tests at %s", c.PR)
-}
-
-type CommentStale struct{}
-
-func (c CommentStale) String() string {
-	return headerBarsPrefix + "Stale branch: unable to test"
+func (c CommentBlocked) String() string {
+	return headerBarsPrefix + "Blocked: " + c.Why
 }

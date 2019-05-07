@@ -22,18 +22,25 @@ type Repository struct {
 	} `graphql:"pullRequests(orderBy: {field: UPDATED_AT, direction: DESC}, first: $prs, states: [OPEN])"`
 }
 
+type MergeStateStatus string
+
+const (
+	MergeStateStatusBehind   MergeStateStatus = "BEHIND"
+	MergeStateStatusBlocked  MergeStateStatus = "BLOCKED"
+	MergeStateStatusClean    MergeStateStatus = "CLEAN"
+	MergeStateStatusDirty    MergeStateStatus = "DIRTY"
+	MergeStateStatusDraft    MergeStateStatus = "DRAFT"
+	MergeStateStatusHasHooks MergeStateStatus = "HAS_HOOKS"
+	MergeStateStatusUnknown  MergeStateStatus = "UNKNOWN"
+	MergeStateStatusUnstable MergeStateStatus = "UNSTABLE"
+)
+
 type PullRequest struct {
-	ID     githubv4.ID
-	URL    githubv4.URI
-	Number githubv4.Int
-	Body   githubv4.String
-
-	Mergeable            githubv4.MergeableState
-	PotentialMergeCommit Commit
-
-	Commits struct {
-		Nodes []struct{ Commit Commit }
-	} `graphql:"commits(last: 1)"`
+	ID               githubv4.ID
+	Number           githubv4.Int
+	State            githubv4.PullRequestState
+	Mergeable        githubv4.MergeableState
+	MergeStateStatus MergeStateStatus
 
 	Comments struct {
 		Nodes []Comment
@@ -47,25 +54,4 @@ type Comment struct {
 
 type Author struct {
 	Login githubv4.String
-}
-
-type Commit struct {
-	OID githubv4.GitObjectID
-	URL githubv4.URI
-
-	Status struct {
-		Contexts []Context
-		State    githubv4.StatusState
-	}
-
-	Parents struct {
-		Nodes []struct {
-			OID githubv4.GitObjectID
-		}
-	} `graphql:"parents(first: 2)"`
-}
-
-type Context struct {
-	Context githubv4.String
-	State   githubv4.StatusState
 }

@@ -8,11 +8,10 @@ import (
 )
 
 type Config struct {
-	Owner     string   `json:"owner"`
-	Repo      string   `json:"repo"`
-	Reviewers []string `json:"reviewers"`
-	MasterRef string   `json:"master_ref"`
-	Token     string   `json:"token"`
+	Owner   string   `json:"owner"`
+	Repo    string   `json:"repo"`
+	Mergers []string `json:"mergers"`
+	Token   string   `json:"token"`
 }
 
 func LoadConfig(path string) (*Config, error) {
