@@ -21,6 +21,9 @@ func LoadComment(text string) interface{} {
 	text = text[len(barsPrefix):]
 
 	switch {
+	case strings.HasPrefix(text, "Merge requested."):
+		return CommentStarted{}
+
 	case strings.HasPrefix(text, "Blocked: "):
 		return CommentBlocked{Why: text[len("Blocked: "):]}
 	}
@@ -35,6 +38,12 @@ func (c CommentMerge) String() string { return "merge" }
 type CommentCancel struct{}
 
 func (c CommentCancel) String() string { return "cancel" }
+
+type CommentStarted struct{}
+
+func (c CommentStarted) String() string {
+	return headerBarsPrefix + "Merge requested."
+}
 
 type CommentBlocked struct {
 	Why string

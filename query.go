@@ -38,6 +38,7 @@ const (
 type PullRequest struct {
 	ID               githubv4.ID
 	Number           githubv4.Int
+	URL              githubv4.URI
 	State            githubv4.PullRequestState
 	Mergeable        githubv4.MergeableState
 	MergeStateStatus MergeStateStatus

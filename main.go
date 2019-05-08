@@ -31,6 +31,10 @@ func run(ctx context.Context) (err error) {
 	}
 	src := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cfg.Token})
 	hcli := oauth2.NewClient(context.Background(), src)
+	hcli.Transport = &AcceptRoundTripper{
+		RoundTripper: hcli.Transport,
+		Accept:       []string{"application/vnd.github.merge-info-preview+json"},
+	}
 	cli := githubv4.NewClient(hcli)
 
 	// Query the information we need to advance the state.
@@ -46,15 +50,47 @@ func run(ctx context.Context) (err error) {
 	}
 
 	fmt.Printf("rate limit: used:%v remaining:%v\n", query.RateLimit.Cost, query.RateLimit.Remaining)
-	prs := query.Repository.PullRequests.Nodes
-	checker := NewStatusChecker(cfg)
 
+	prs := query.Repository.PullRequests.Nodes
+
+	// Calculate the status of every PR
+	checker := NewStatusChecker(cfg)
+	statuses := make(map[int]Status)
+	attemptRequested := false
+	for i := range prs {
+		status := checker.Status(&prs[i])
+		statuses[i] = status
+		attemptRequested = attemptRequested || status == StatusAttemptMerge
+	}
+
+prs:
 	for i := range prs {
 		pr := &prs[i]
+		switch statuses[i] {
+		case StatusMergeRequested:
+			// If we're already attempting a merge somewhere else, do nothing
+			if attemptRequested {
+				fmt.Printf("%v: waiting for other pr to finish before starting", pr.URL)
+				continue prs
+			}
 
-		fmt.Printf("%d: mergable:%v status:%v advance:%v\n",
-			pr.Number, pr.Mergeable, pr.MergeStateStatus,
-			checker.ShouldAdvance(pr))
+			// Comment to inform that we're going to attempt to merge this
+			comment := CommentStarted{}
+			err := addComment(ctx, cli, pr.ID, comment.String())
+			fmt.Printf("%v: adding started comment: %v\n", pr.URL, err)
+
+		case StatusWaiting:
+			fmt.Printf("%v: waiting for human to request merge\n", pr.URL)
+
+		case StatusBlocked:
+			// Comment to inform that a human is required
+			comment := CommentBlocked{Why: "unknown"}
+			err := addComment(ctx, cli, pr.ID, comment.String())
+			fmt.Printf("%v: adding blocked comment: %v\n", pr.URL, err)
+
+		case StatusAttemptMerge:
+			fmt.Printf("%v: must merge this somehow\n", pr.URL)
+		}
 	}
 
 	return nil
